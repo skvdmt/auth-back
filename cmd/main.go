@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"unicode/utf8"
 
 	"github.com/skvdmt/auth-back/internal"
 	"github.com/skvdmt/auth-back/internal/model"
@@ -9,6 +11,10 @@ import (
 
 // main Точка входа в приложение.
 func main() {
+
+	fmt.Println(utf8.RuneCountInString("GHCLADSDD5uTq4UgO3ffTNR4i4r6hBt4"))
+	os.Exit(1)
+
 	// Создание логгера.
 	var err error
 	if model.Log, err = model.NewLogger(); err != nil {

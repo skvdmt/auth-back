@@ -48,8 +48,8 @@ jobs:
               --output=type=docker \
               --build-arg NAME=${{ github.event.repository.name }} \
               --build-arg POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
-              --build-arg ACCESS_KEY=${ACCESS_KEY} \
-              --build-arg REFRESH_KEY=${REFRESH_KEY} \
+              --build-arg ACCESS_KEY=${{ secrets.ACCESS_KEY }} \
+              --build-arg REFRESH_KEY=${{ secrets.REFRESH_KEY }} \
               --no-cache \
               --tag ${{ github.repository }}:testing .
             docker rmi ${{ github.repository }}:testing
@@ -94,8 +94,8 @@ jobs:
               --network ${{ secrets.DOCKER_NETWORK }} \
               --name ${{ github.event.repository.name }} \
               --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
-              --env ACCESS_KEY=${ACCESS_KEY} \
-              --env REFRESH_KEY=${REFRESH_KEY} \
+              --env ACCESS_KEY=${{ secrets.ACCESS_KEY }} \
+              --env REFRESH_KEY=${{ secrets.REFRESH_KEY }} \
               --volume ${{ secrets.HOME }}/logs/${{ github.event.repository.name }}:/var/log/${{ github.event.repository.name }} \
               --restart unless-stopped \
               --stop-timeout -1 \
