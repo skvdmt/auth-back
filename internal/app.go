@@ -57,6 +57,10 @@ func NewApp() (*App, error) {
 	model.Errors = make(chan error)
 	// Создание контекста.
 	a.ctx, a.cancel = context.WithCancel(context.Background())
+	// Ключи.
+	if err := model.CreateKeys(); err != nil {
+		return nil, err
+	}
 	// Создание транспортного слоя.
 	a.delivery, err = delivery.NewApp(a.ctx)
 	if err != nil {
