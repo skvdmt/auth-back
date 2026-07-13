@@ -1,0 +1,10 @@
+.gihub
+build
+logs
+schema
+.dockerignore
+.gitignore
+docker-compose.yaml
+Dockerfile
+Dockerfile.dev
+*.md

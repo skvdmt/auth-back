@@ -1,0 +1,104 @@
+name: Integration and deploy.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Creating SSH key files.
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/github_ed25519
+          sudo chmod 600 ~/.ssh/github_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Cloning sources.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            cd ~/src
+            rm -rf ${{ github.repository }}
+            git clone ssh://git@github.com/${{ github.repository }}.git
+          EOF
+      - name: Migrate up.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            cd ~/src/${{ github.event.repository.name }}
+            docker run --rm \
+              --network=${{ secrets.DOCKER_NETWORK }} \
+              --name migration \
+              --volume ${{ secrets.HOME }}/src/${{ github.event.repository.name }}/schema:/migrations \
+              migrate/migrate \
+                -path /migrations \
+                -database 'postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }}@${{ secrets.POSTGRES_HOST }}:5432/${{ github.event.repository.name }}?sslmode=disable&password=' \
+                up
+          EOF
+      - name: Testing.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            cd ~/src/${{ github.event.repository.name }}
+            docker buildx rm ${{ secrets.DOCKER_NETWORK }}-builder || true
+            docker buildx create --use \
+              --name ${{ secrets.DOCKER_NETWORK }}-builder \
+              --driver docker-container \
+              --driver-opt "network=${{ secrets.DOCKER_NETWORK }}"
+            docker buildx build \
+              --network=host \
+              --target=testing \
+              --output=type=docker \
+              --build-arg NAME=${{ github.event.repository.name }} \
+              --build-arg POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
+              --no-cache \
+              --tag ${{ github.repository }}:testing .
+            docker rmi ${{ github.repository }}:testing
+            docker buildx rm ${{ secrets.DOCKER_NETWORK }}-builder
+          EOF
+      - name: Building.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            cd ~/src/${{ github.event.repository.name }}
+            docker build \
+             --build-arg NAME=${{ github.event.repository.name }} \
+             --no-cache \
+             --tag ${{ github.repository }} .
+          EOF
+      - name: Remove sources.
+        if: success() || failure()
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            rm -rf ~/src/${{ github.event.repository.name }}
+          EOF
+      - name: Remove ssh key files.
+        if: success() || failure()
+        run: |
+          rm -f ~/.ssh/github_ed25519
+          rm -f ~/.ssh/known_hosts
+  deploy:
+    needs: [integration]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Creating SSH key files.
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_ed25519
+          sudo chmod 600 ~/.ssh/github_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Creating and runnig application container.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            docker stop ${{ github.event.repository.name }} || true
+            docker rm ${{ github.event.repository.name }} || true
+            docker run -d \
+              --network ${{ secrets.DOCKER_NETWORK }} \
+              --name ${{ github.event.repository.name }} \
+              --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
+              --volume ${{ secrets.HOME }}/logs/${{ github.event.repository.name }}:/var/log/${{ github.event.repository.name }} \
+              --restart unless-stopped \
+              --stop-timeout -1 \
+              ${{ github.repository }}
+          EOF
+      - name: Remove SSH key files.
+        if: success() || failure()
+        run: |
+          rm -f ~/.ssh/github_ed25519
+          rm -f ~/.ssh/known_hosts
