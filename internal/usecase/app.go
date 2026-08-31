@@ -46,7 +46,7 @@ func (a *App) Login(ctx context.Context, username, password string) (*entities.T
 	if utf8.RuneCountInString(username) < 3 ||
 		utf8.RuneCountInString(username) > 15 {
 		return nil, erw.New(
-			erw.Status(http.StatusBadRequest),
+			erw.Status(http.StatusUnauthorized),
 			erw.Response("username must be from 3 to 15 characters"),
 		)
 	}
@@ -54,7 +54,7 @@ func (a *App) Login(ctx context.Context, username, password string) (*entities.T
 	if utf8.RuneCountInString(password) < 8 ||
 		utf8.RuneCountInString(password) > 20 {
 		return nil, erw.New(
-			erw.Status(http.StatusBadRequest),
+			erw.Status(http.StatusUnauthorized),
 			erw.Response("password must be from 8 to 20 characters"),
 		)
 	}

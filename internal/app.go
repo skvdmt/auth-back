@@ -76,19 +76,11 @@ func NewApp() (*App, error) {
 	return a, nil
 }
 
-// certsDir Директория сертификатов.
-func (a *App) certsDir() string {
-	m, o := os.LookupEnv(model.MODE)
-	if o && m == model.MODE_DEV {
-		return CERT_DIRECTORY_DEV
-	}
-	return CERT_DIRECTORY_PROD
-}
-
 // routing Настройка маршрутов.
 func (a *App) routing() {
-	a.router.HandleFunc("GET /login", a.delivery.Login)
-	a.router.HandleFunc("GET /refresh", a.delivery.Refresh)
+	a.router.HandleFunc("/login", a.delivery.Login)
+	a.router.HandleFunc("/logout", a.delivery.Logout)
+	a.router.HandleFunc("/refresh", a.delivery.Refresh)
 }
 
 // Start Запуск приложения.

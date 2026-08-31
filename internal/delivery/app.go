@@ -12,6 +12,11 @@ import (
 	"github.com/skvdmt/erw"
 )
 
+const (
+	CONTENT_TYPE     = "Content-Type"
+	APPLICATION_JSON = "application/json"
+)
+
 // App Транспортный слой.
 type App struct {
 	// Сервисный слой.
@@ -43,8 +48,8 @@ func (a *App) Stop(ctx context.Context) error {
 // Login Аутентификация пользователя.
 func (a *App) Login(w http.ResponseWriter, r *http.Request) {
 	model.Log.Info.Info("Auth")
-	u := r.URL.Query().Get("username")
-	p := r.URL.Query().Get("password")
+	u, p, _ := r.BasicAuth()
+	w.Header().Set(CONTENT_TYPE, APPLICATION_JSON)
 	t, err := a.usecase.Login(r.Context(), u, p)
 	if err != nil {
 		a.errorHandle(w, err)
@@ -59,7 +64,6 @@ func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 	model.Log.Info.Info("RefreshTokens")
 	c, err := r.Cookie("refresh_token")
 	if err != nil {
-		fmt.Println(err)
 		a.errorHandle(w, erw.New(
 			erw.Status(http.StatusUnauthorized),
 		))
@@ -72,6 +76,23 @@ func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 	a.setRefreshTokenCookie(w, n.RefreshToken())
 	a.response(w, http.StatusOK, n)
+}
+
+// logout Разлогиниться.
+func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
+	model.Log.Info.Info("Logout")
+	// Удалить refresh_token из cookie.
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Domain:   model.Conf.CookieDomain,
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	})
+	a.response(w, http.StatusOK, nil)
 }
 
 // errorHandle Обработка ошибок.
@@ -91,10 +112,7 @@ func (a *App) errorHandle(w http.ResponseWriter, e error) {
 
 // response Отправить ответ.
 func (a *App) response(w http.ResponseWriter, status int, resp any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Vary", "Origin")
+	w.Header().Set(CONTENT_TYPE, APPLICATION_JSON)
 	w.WriteHeader(status)
 	b, ok := resp.([]byte)
 	if ok {
@@ -109,7 +127,7 @@ func (a *App) setRefreshTokenCookie(w http.ResponseWriter, t string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    t,
-		Domain:   "localhost",
+		Domain:   model.Conf.CookieDomain,
 		Path:     "/",
 		Expires:  time.Now().AddDate(0, 0, 7),
 		HttpOnly: true,

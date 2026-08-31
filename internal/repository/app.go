@@ -21,7 +21,7 @@ const (
 	USER_PASSWORD     = "password"
 	CLEANING_INTERVAL = time.Minute * 1
 
-	ACCESS_TOKEN_VALID       = time.Hour * 1
+	ACCESS_TOKEN_VALID       = time.Minute * 15
 	REFRESH_TOKEN_VALID_DAYS = 7
 	REFRESH_TOKEN_USER_LIMIT = 10
 )
@@ -83,7 +83,7 @@ func (a *App) Stop(ctx context.Context) error {
 func (a *App) Login(ctx context.Context, username, password string) (*entities.Tokens, error) {
 	if username != USER_NAME || password != USER_PASSWORD {
 		return nil, erw.New(
-			erw.Status(http.StatusBadRequest),
+			erw.Status(http.StatusUnauthorized),
 			erw.Response("incorrect login or password"),
 		)
 	}

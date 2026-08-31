@@ -5,3 +5,4 @@ postgres:
   database: auth-back
 server:
   port: 8000
+cookie_domain: secret.skvdmt.ru

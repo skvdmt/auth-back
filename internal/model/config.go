@@ -43,8 +43,9 @@ type PostgresConfig struct {
 
 // Config Конфигурация.
 type Config struct {
-	Postgres *PostgresConfig `yaml:"postgres"`
-	Server   *ServerConfig   `yaml:"server"`
+	Postgres     *PostgresConfig `yaml:"postgres"`
+	Server       *ServerConfig   `yaml:"server"`
+	CookieDomain string          `yaml:"cookie_domain"`
 }
 
 // ServerConfig Конфигурация сервера.

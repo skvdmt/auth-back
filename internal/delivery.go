@@ -11,6 +11,8 @@ type Delivery interface {
 	Stop(context.Context) error
 	// Авторизация пользователя.
 	Login(http.ResponseWriter, *http.Request)
+	// Разлогиниться.
+	Logout(http.ResponseWriter, *http.Request)
 	// Обновление токенов.
 	Refresh(http.ResponseWriter, *http.Request)
 }
