@@ -36,6 +36,7 @@ jobs:
       - name: Testing.
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
             cd ~/src/${{ github.event.repository.name }}
             docker buildx rm ${{ secrets.DOCKER_NETWORK }}-builder || true
             docker buildx create --use \
@@ -52,12 +53,11 @@ jobs:
               --build-arg REFRESH_KEY=${{ secrets.REFRESH_KEY }} \
               --no-cache \
               --tag ${{ github.repository }}:testing .
-            docker rmi ${{ github.repository }}:testing
-            docker buildx rm ${{ secrets.DOCKER_NETWORK }}-builder
           EOF
       - name: Building.
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
             cd ~/src/${{ github.event.repository.name }}
             docker build \
              --build-arg NAME=${{ github.event.repository.name }} \
@@ -68,6 +68,8 @@ jobs:
         if: success() || failure()
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            docker rmi ${{ github.repository }}:testing
+            docker buildx rm ${{ secrets.DOCKER_NETWORK }}-builder
             rm -rf ~/src/${{ github.event.repository.name }}
           EOF
       - name: Remove ssh key files.

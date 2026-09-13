@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/skvdmt/auth-back/internal/delivery"
 	"github.com/skvdmt/auth-back/internal/model"
@@ -39,6 +41,8 @@ type App struct {
 	stopping bool
 	// Корректное завершение горутин.
 	wg *sync.WaitGroup
+	// Листнер готов.
+	listenerReady bool
 }
 
 // NewApp Конструктор.
@@ -98,6 +102,28 @@ func (a *App) Start() []error {
 	return a.interruptHandler()
 }
 
+// Ready Сервер готов обрабатывать запросы.
+func (a *App) Ready() bool {
+	return a.listenerReady
+}
+
+// HealthCheckLock Метод блокирует выполнение пока
+// сервер не будет готов обрабатывать запросы.
+func (a *App) HelthCheckLock() error {
+	const interval = time.Millisecond * 10
+	const timeout = time.Second * 3
+	s := time.Now()
+	for {
+		if a.Ready() {
+			return nil
+		}
+		time.Sleep(interval)
+		if time.Since(s) > timeout {
+			return fmt.Errorf("helth check timeout")
+		}
+	}
+}
+
 // errorHandler Обработчик глобального канала ошибок.
 func (a *App) errorHandler() {
 	model.Log.Info.Info("error handle starting")
@@ -122,13 +148,20 @@ func (a *App) errorHandler() {
 
 // authServerStart Запуск сервера авторизации.
 func (a *App) authServerStart() {
-	model.Log.Info.Info(fmt.Sprintf("auth server starting on %d port", model.Conf.Server.Port))
 	defer func() {
 		model.Log.Info.Info("auth http server stopped")
 		a.wg.Done()
 	}()
-	err := a.server.ListenAndServe()
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", model.Conf.Server.Port))
+	if err != nil {
+		model.Errors <- err
+		return
+	}
+	model.Log.Info.Info(fmt.Sprintf("auth server starting on %d port",
+		model.Conf.Server.Port))
+	a.listenerReady = true
+	if err := a.server.Serve(l); err != nil &&
+		!errors.Is(err, http.ErrServerClosed) {
 		model.Errors <- err
 	}
 }
