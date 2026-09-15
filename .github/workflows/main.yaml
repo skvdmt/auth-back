@@ -102,6 +102,14 @@ jobs:
               --restart unless-stopped \
               --stop-timeout -1 \
               ${{ github.repository }}-v${{ vars.MAJOR_VERSION }}
+            docker stop ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }}-doc || true
+            docker rm ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }}-doc || true
+            docker run -d \
+              --name ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }}-doc \
+              --network ${{ secrets.DOCKER_NETWORK }} \
+              --restart unless-stopped \
+              -e SWAGGER_JSON_URL=https://secret.skvdmt.ru/api/auth/v${{ vars.MAJOR_VERSION }}/openapi.yaml \
+              docker.swagger.io/swaggerapi/swagger-ui
           EOF
       - name: Remove SSH key files.
         if: success() || failure()
