@@ -33,6 +33,12 @@ const (
 // Conf Глобальный экземпляр конфигурации.
 var Conf *Config
 
+// Links Ссылки
+type Links struct {
+	Api           string `yaml:"api"`
+	Documentation string `yaml:"documentation"`
+}
+
 // PostgresConfig Конфигурация postgres.
 type PostgresConfig struct {
 	Host     string `yaml:"host"`
@@ -43,6 +49,7 @@ type PostgresConfig struct {
 
 // Config Конфигурация.
 type Config struct {
+	Links        *Links          `yaml:"links"`
 	Postgres     *PostgresConfig `yaml:"postgres"`
 	Server       *ServerConfig   `yaml:"server"`
 	CookieDomain string          `yaml:"cookie_domain"`
@@ -63,6 +70,7 @@ func NewConfig() (*Config, error) {
 	c := &Config{
 		Postgres: &PostgresConfig{},
 		Server:   &ServerConfig{},
+		Links:    &Links{},
 	}
 	if err := yaml.Unmarshal(f, c); err != nil {
 		return nil, err

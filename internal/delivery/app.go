@@ -45,12 +45,12 @@ func (a *App) Stop(ctx context.Context) error {
 	return nil
 }
 
-// Login Аутентификация пользователя.
-func (a *App) Login(w http.ResponseWriter, r *http.Request) {
+// Tokens Получение токенов.
+func (a *App) Tokens(w http.ResponseWriter, r *http.Request) {
 	model.Log.Info.Info("Auth")
 	u, p, _ := r.BasicAuth()
 	w.Header().Set(CONTENT_TYPE, APPLICATION_JSON)
-	t, err := a.usecase.Login(r.Context(), u, p)
+	t, err := a.usecase.Tokens(r.Context(), u, p)
 	if err != nil {
 		a.errorHandle(w, err)
 		return
@@ -78,8 +78,8 @@ func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 	a.response(w, http.StatusOK, n)
 }
 
-// logout Разлогиниться.
-func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
+// DeleteRefresh Удаление токена обновления.
+func (a *App) DeleteRefresh(w http.ResponseWriter, r *http.Request) {
 	model.Log.Info.Info("Logout")
 	// Удалить refresh_token из cookie.
 	http.SetCookie(w, &http.Cookie{
@@ -93,6 +93,11 @@ func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteNoneMode,
 	})
 	a.response(w, http.StatusOK, nil)
+}
+
+// Documentation Документация.
+func (a *App) Documentation(w http.ResponseWriter, r *http.Request) {
+	a.usecase.Documentation()
 }
 
 // errorHandle Обработка ошибок.

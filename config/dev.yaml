@@ -1,3 +1,6 @@
+links:
+  api: https://secret.skvdmt.ru/api/auth/v1
+  documentation: https://secret.skvdmt.ru/api/auth/v1/doc
 postgres:
   host: localhost
   port: 5432

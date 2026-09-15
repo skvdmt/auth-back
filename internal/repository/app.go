@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -33,6 +35,7 @@ type App struct {
 	cleaningTiker *time.Ticker
 	stopCleaning  chan struct{}
 	wg            *sync.WaitGroup
+	documentation []byte
 }
 
 // NewApp Конструктор.
@@ -48,15 +51,17 @@ func NewApp(ctx context.Context) (*App, error) {
 	if a.db, err = OpenPostgresDB(); err != nil {
 		return nil, err
 	}
-
-	// Обработчик очистки.
-	a.wg.Add(1)
-	go a.cleaningHandler()
-
+	// Обновление документации
+	if err := a.updateDocumentation(); err != nil {
+		return nil, err
+	}
 	// Разовая очистка.
 	if err := a.clearRefreshTokens(); err != nil {
 		return nil, err
 	}
+	// Обработчик очистки.
+	a.wg.Add(1)
+	go a.cleaningHandler()
 	return a, nil
 }
 
@@ -79,8 +84,8 @@ func (a *App) Stop(ctx context.Context) error {
 	return nil
 }
 
-// Login Авторизация пользователя.
-func (a *App) Login(ctx context.Context, username, password string) (*entities.Tokens, error) {
+// Tokens Получение токенов.
+func (a *App) Tokens(ctx context.Context, username, password string) (*entities.Tokens, error) {
 	if username != USER_NAME || password != USER_PASSWORD {
 		return nil, erw.New(
 			erw.Status(http.StatusUnauthorized),
@@ -120,6 +125,31 @@ func (a *App) Refresh(ctx context.Context, username, token string) (*entities.To
 		)
 	}
 	return a.createTokens(username)
+}
+
+// Documentation Документация.
+func (a *App) Documentation() []byte {
+	return a.documentation
+}
+
+// updateDocumentation Обновление документации.
+func (a *App) updateDocumentation() error {
+	const (
+		name = "openapi.yaml"
+		dev  = "."
+		prod = "/usr/local/share/doc"
+	)
+	m, o := os.LookupEnv(model.MODE)
+	dir := prod
+	if o && m == model.MODE_DEV {
+		dir = dev
+	}
+	doc, err := os.ReadFile(filepath.Join(dir, name))
+	if err != nil {
+		return err
+	}
+	a.documentation = doc
+	return nil
 }
 
 // cleaningHandler Обработчик очистки.

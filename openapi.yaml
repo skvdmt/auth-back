@@ -1,0 +1,113 @@
+openapi: 3.2.0
+info:
+  title: Аутентификация
+  version: 1.0.0
+  description: API аутентификации для получения токенов доступа к другим сервисам и токенов обновления. Для атентификации введите username dima и пароль password и вы получите токен доступа в теле ответа, который можно исполльзовать для Bearer аутентификации в [API Secret](https://secret.skvdmt.ru/api/secret/v1/docs) и токен обновления, который можно использовать для получения новой пары токенов доступа и обновления. Токен обновления можно использовать только один раз.
+servers:
+  - url: https://secret.skvdmt.ru/api/auth/v1
+    description: Production server
+tags:
+  - name: main
+    summary: Основа
+    description: Самые основные адреса правления
+paths:
+  /tokens:
+    summary: Токеноы
+    description: Токен доступа и токен обновления.
+    get:
+      summary: Получение токенов.
+      description: Получение токена доступа и токена обновления.
+      tags:
+        - main
+      security:
+        - tokensAuth: []
+      responses:
+        '200':
+          description: Все в порядке.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+          headers:
+            Set-Cookie:
+              schema:
+                $ref: '#/components/schemas/RefreshToken'
+        '401':
+          description: Ошибка аутентификации.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /refresh:
+    summary: Обновление.
+    description: Обновление токенов.
+    get:
+      summary: Получение новых токенов.
+      description: Получение токена доступа и токена обновления.
+      tags:
+        - main
+      security:
+        - refreshAuth: []
+      responses:
+        '200':
+          description: Все в порядке.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+          headers:
+            Set-Cookie:
+              schema:
+                $ref: '#/components/schemas/RefreshToken'
+        '401':
+          description: Ошибка аутентификации.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+    delete:
+      summary: Удаление токена обновления
+      description: Перезаписвывает Cookie указывая истекший срок давности.
+      tags:
+        - main
+      responses:
+        '200':
+          description: Все в порядке.
+          headers:
+            Set-Cookie:
+              schema:
+                $ref: '#/components/schemas/DeleteRefreshToken'
+components:
+  schemas:
+    AccessToken:
+      type: object
+      properties: 
+        access_token:
+          type: string
+          description: Токен доступа.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIyMDI2LTA5LTE1VDEyOjUzOjA0KzAzOjAwIiwiaWF0IjoiMjAyNi0wOS0xNVQxMjozODowNCswMzowMCIsIm5iZiI6IjIwMjYtMDktMTVUMTI6Mzg6MDQrMDM6MDAiLCJ1c3IiOiJkaW1hIn0.fXHguJVFRcH7Vpu1oUvceeNM3Dbpc-_CxJsxE7ycEXg
+    RefreshToken:
+      type: string
+      description: Токен обновления.
+      example: refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIyMDI2LTA5LTIyVDExOjUzOjM4KzAzOjAwIiwiaWF0IjoiMjAyNi0wOS0xNVQxMTo1MzozOCswMzowMCIsIm5iZiI6IjIwMjYtMDktMTVUMTE6NTM6MzgrMDM6MDAiLCJ1c3IiOiJkaW1hIn0.SyVxtNGCweFA1bd1Srvd78QVx8xiciFnUKyZgEJnn8k; Path=/; Domain=secret.skvdmt.ru; Expires=Tue, 22 Sep 2026 08:53:38 GMT; HttpOnly; Secure; SameSite=None
+    DeleteRefreshToken:
+      type: string
+      description: Удаление токена обновления.
+      example: refresh_token=; Path=/; Domain=secret.skvdmt.ru; Max-Age=0; HttpOnly; Secure; SameSite=None
+    AuthError:
+      type: object
+      properties: 
+        error:
+          type: string
+          description: Описание ошибки.
+  securitySchemes:
+    tokensAuth:
+      type: http
+      scheme: basic
+    refreshAuth:
+      type: apiKey
+      in: cookie
+      name: refresh_token
+security:
+  - tokensAuth: []
+  - refreshAuth: []

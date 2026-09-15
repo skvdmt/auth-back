@@ -90,11 +90,11 @@ jobs:
       - name: Creating and runnig application container.
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
-            docker stop ${{ github.event.repository.name }} || true
-            docker rm ${{ github.event.repository.name }} || true
+            docker stop ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} || true
+            docker rm ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} || true
             docker run -d \
               --network ${{ secrets.DOCKER_NETWORK }} \
-              --name ${{ github.event.repository.name }} \
+              --name ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} \
               --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
               --env ACCESS_KEY=${{ secrets.ACCESS_KEY }} \
               --env REFRESH_KEY=${{ secrets.REFRESH_KEY }} \

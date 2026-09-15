@@ -47,15 +47,18 @@ type App struct {
 
 // NewApp Конструктор.
 func NewApp() (*App, error) {
-	model.Log.Info.Info(fmt.Sprintf("app %s creating", model.NAME))
-	a := &App{
-		interrupt: make(chan os.Signal),
-		wg:        &sync.WaitGroup{},
-	}
 	var err error
 	// Загрузка конфигурации.
 	if model.Conf, err = model.NewConfig(); err != nil {
 		return nil, err
+	}
+	model.Log.Info.Info(fmt.Sprintf("API url %s", model.Conf.Links.Api))
+	model.Log.Info.Info(fmt.Sprintf("Documentation %s", model.Conf.Links.Documentation))
+
+	model.Log.Info.Info(fmt.Sprintf("app %s creating", model.NAME))
+	a := &App{
+		interrupt: make(chan os.Signal),
+		wg:        &sync.WaitGroup{},
 	}
 	// Создане глобального канала ошибок для всего приложения.
 	model.Errors = make(chan error)
@@ -82,9 +85,10 @@ func NewApp() (*App, error) {
 
 // routing Настройка маршрутов.
 func (a *App) routing() {
-	a.router.HandleFunc("/login", a.delivery.Login)
-	a.router.HandleFunc("/logout", a.delivery.Logout)
-	a.router.HandleFunc("/refresh", a.delivery.Refresh)
+	a.router.HandleFunc("GET /tokens", a.delivery.Tokens)
+	a.router.HandleFunc("GET /refresh", a.delivery.Refresh)
+	a.router.HandleFunc("DELETE /refresh", a.delivery.DeleteRefresh)
+	a.router.HandleFunc("GET /openapi.yaml", a.delivery.Documentation)
 }
 
 // Start Запуск приложения.

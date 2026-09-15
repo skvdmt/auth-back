@@ -40,9 +40,9 @@ func (a *App) Stop(ctx context.Context) error {
 	return nil
 }
 
-// Login Авторизация пользователя.
-func (a *App) Login(ctx context.Context, username, password string) (*entities.Tokens, error) {
-	// Валидация длинны логина.
+// Tokens Получение токенов.
+func (a *App) Tokens(ctx context.Context, username, password string) (*entities.Tokens, error) {
+	// Валидация длинны имени пользователя.
 	if utf8.RuneCountInString(username) < 3 ||
 		utf8.RuneCountInString(username) > 15 {
 		return nil, erw.New(
@@ -58,7 +58,7 @@ func (a *App) Login(ctx context.Context, username, password string) (*entities.T
 			erw.Response("password must be from 8 to 20 characters"),
 		)
 	}
-	return a.repository.Login(ctx, username, password)
+	return a.repository.Tokens(ctx, username, password)
 }
 
 // Refresh Обновление токенов.
@@ -81,4 +81,9 @@ func (a *App) Refresh(ctx context.Context, token string) (*entities.Tokens, erro
 		)
 	}
 	return a.repository.Refresh(ctx, u, token)
+}
+
+// Documentation Документация.
+func (a *App) Documentation() []byte {
+	return a.repository.Documentation()
 }
