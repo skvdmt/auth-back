@@ -97,7 +97,7 @@ func (a *App) DeleteRefresh(w http.ResponseWriter, r *http.Request) {
 
 // Documentation Документация.
 func (a *App) Documentation(w http.ResponseWriter, r *http.Request) {
-	a.usecase.Documentation()
+	w.Write(a.usecase.Documentation())
 }
 
 // errorHandle Обработка ошибок.

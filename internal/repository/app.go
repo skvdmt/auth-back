@@ -134,6 +134,7 @@ func (a *App) Documentation() []byte {
 
 // updateDocumentation Обновление документации.
 func (a *App) updateDocumentation() error {
+	model.Log.Info.Info("update documentation starting")
 	const (
 		name = "openapi.yaml"
 		dev  = "."
