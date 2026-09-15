@@ -37,7 +37,7 @@ func TestRefresh(t *testing.T) {
 		req, err := http.NewRequest(
 			"GET",
 			fmt.Sprintf(
-				"http://localhost:%d/login",
+				"http://localhost:%d/tokens",
 				model.Conf.Server.Port,
 			),
 			nil,

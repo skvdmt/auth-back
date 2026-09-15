@@ -15,8 +15,8 @@ import (
 	_ "github.com/skvdmt/auth-back/testing_init"
 )
 
-// TestLogin Тестирование входа.
-func TestLogin(t *testing.T) {
+// TestTokens Тестирование получения токенов.
+func TestTokens(t *testing.T) {
 	p, err := NewPrepareApp()
 	if err != nil {
 		log.Fatal(err)
@@ -71,7 +71,7 @@ func TestLogin(t *testing.T) {
 			req, err := http.NewRequest(
 				"GET",
 				fmt.Sprintf(
-					"http://localhost:%d/login",
+					"http://localhost:%d/tokens",
 					model.Conf.Server.Port,
 				),
 				nil,

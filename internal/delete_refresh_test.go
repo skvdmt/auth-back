@@ -12,8 +12,8 @@ import (
 	_ "github.com/skvdmt/auth-back/testing_init"
 )
 
-// TestLogout Тестирование выхода.
-func TestLogout(t *testing.T) {
+// TestDeleteRefresh Тестирование удаления токена обновления.
+func TestDeleteRefresh(t *testing.T) {
 	p, err := NewPrepareApp()
 	if err != nil {
 		log.Fatal(err)
@@ -27,13 +27,13 @@ func TestLogout(t *testing.T) {
 		}
 	}()
 
-	t.Run("refresh tokens", func(t *testing.T) {
+	t.Run("delete refresh token", func(t *testing.T) {
 		c := http.Client{}
 		// Получение токена обновления
 		req, err := http.NewRequest(
-			"GET",
+			"DELETE",
 			fmt.Sprintf(
-				"http://localhost:%d/logout",
+				"http://localhost:%d/refresh",
 				model.Conf.Server.Port,
 			),
 			nil,

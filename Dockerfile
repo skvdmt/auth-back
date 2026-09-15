@@ -4,6 +4,8 @@ ARG NAME
 WORKDIR /usr/src/${NAME}
 # Создание директории конфигурации.
 RUN mkdir /etc/${NAME}
+# Создание директории журналов.
+RUN mkdir /var/log/${NAME}
 # Копирование файлов.
 COPY . .
 COPY ./config/prod.yaml /etc/${NAME}/prod.yaml
