@@ -63,6 +63,7 @@ jobs:
              --build-arg NAME=${{ github.event.repository.name }} \
              --no-cache \
              --tag ${{ github.repository }}-v${{ vars.MAJOR_VERSION }} .
+            docker push ${{ github.repository }}-v${{ vars.MAJOR_VERSION }}
           EOF
       - name: Remove sources.
         if: success() || failure()
@@ -92,6 +93,7 @@ jobs:
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
             docker stop ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} || true
             docker rm ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} || true
+            docker pull ${{ github.repository }}-v${{ vars.MAJOR_VERSION }}
             docker run -d \
               --network ${{ secrets.DOCKER_NETWORK }} \
               --name ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} \
