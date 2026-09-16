@@ -15,5 +15,5 @@ type Usecase interface {
 	// Обновление токенов.
 	Refresh(c context.Context, token string) (*entities.Tokens, error)
 	// Документация.
-	Documentation() []byte
+	Documentation(c context.Context) []byte
 }

@@ -128,7 +128,7 @@ func (a *App) Refresh(ctx context.Context, username, token string) (*entities.To
 }
 
 // Documentation Документация.
-func (a *App) Documentation() []byte {
+func (a *App) Documentation(c context.Context) []byte {
 	return a.documentation
 }
 

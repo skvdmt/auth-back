@@ -97,7 +97,9 @@ func (a *App) DeleteRefresh(w http.ResponseWriter, r *http.Request) {
 
 // Documentation Документация.
 func (a *App) Documentation(w http.ResponseWriter, r *http.Request) {
-	w.Write(a.usecase.Documentation())
+	w.Header().Set("Content-Type", "application/yaml")
+	w.WriteHeader(http.StatusOK)
+	w.Write(a.usecase.Documentation(r.Context()))
 }
 
 // errorHandle Обработка ошибок.

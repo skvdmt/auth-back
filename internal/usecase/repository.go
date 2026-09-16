@@ -15,5 +15,5 @@ type Repository interface {
 	// Обновление токенов.
 	Refresh(c context.Context, username, token string) (*entities.Tokens, error)
 	// Документация.
-	Documentation() []byte
+	Documentation(c context.Context) []byte
 }

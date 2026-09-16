@@ -84,6 +84,6 @@ func (a *App) Refresh(ctx context.Context, token string) (*entities.Tokens, erro
 }
 
 // Documentation Документация.
-func (a *App) Documentation() []byte {
-	return a.repository.Documentation()
+func (a *App) Documentation(c context.Context) []byte {
+	return a.repository.Documentation(c)
 }
