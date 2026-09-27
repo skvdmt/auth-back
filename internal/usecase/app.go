@@ -42,7 +42,7 @@ func (a *App) Stop(ctx context.Context) error {
 
 // Tokens Получение токенов.
 func (a *App) Tokens(ctx context.Context, username, password string) (*entities.Tokens, error) {
-	// Валидация длинны имени пользователя.
+	// Валидация длины имени пользователя.
 	if utf8.RuneCountInString(username) < 3 ||
 		utf8.RuneCountInString(username) > 15 {
 		return nil, erw.New(
@@ -50,7 +50,7 @@ func (a *App) Tokens(ctx context.Context, username, password string) (*entities.
 			erw.Response("username must be from 3 to 15 characters"),
 		)
 	}
-	// Валидация длинны пароля.
+	// Валидация длины пароля.
 	if utf8.RuneCountInString(password) < 8 ||
 		utf8.RuneCountInString(password) > 20 {
 		return nil, erw.New(

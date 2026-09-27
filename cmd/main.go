@@ -7,7 +7,7 @@ import (
 	"github.com/skvdmt/auth-back/internal/model"
 )
 
-// main Точка входа в приложение.
+// Точка входа в приложение.
 func main() {
 	// Создание логгера.
 	var err error

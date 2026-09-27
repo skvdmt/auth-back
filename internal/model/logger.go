@@ -36,8 +36,14 @@ type Logger struct {
 
 // NewLogger Конструктор.
 func NewLogger() (*Logger, error) {
+	ld := logDir()
+	if _, err := os.Stat(ld); os.IsNotExist(err) {
+		if err := os.MkdirAll(ld, os.ModePerm); err != nil {
+			return nil, err
+		}
+	}
 	e, err := os.OpenFile(
-		filepath.Join(logDir(), LOG_ERROR_FILENAME),
+		filepath.Join(ld, LOG_ERROR_FILENAME),
 		LOG_ERROR_FLAGS,
 		os.ModePerm,
 	)

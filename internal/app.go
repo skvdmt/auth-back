@@ -16,11 +16,6 @@ import (
 	"github.com/skvdmt/auth-back/internal/model"
 )
 
-const (
-	CERT_DIRECTORY_DEV  = "./certs"
-	CERT_DIRECTORY_PROD = "/etc/ssl/certs"
-)
-
 // App Основная структура приложения.
 type App struct {
 	// Канал сигналов остановки.
@@ -113,7 +108,7 @@ func (a *App) Ready() bool {
 
 // HealthCheckLock Метод блокирует выполнение пока
 // сервер не будет готов обрабатывать запросы.
-func (a *App) HelthCheckLock() error {
+func (a *App) HealthCheckLock() error {
 	const interval = time.Millisecond * 10
 	const timeout = time.Second * 3
 	s := time.Now()
@@ -123,7 +118,7 @@ func (a *App) HelthCheckLock() error {
 		}
 		time.Sleep(interval)
 		if time.Since(s) > timeout {
-			return fmt.Errorf("helth check timeout")
+			return fmt.Errorf("health check timeout")
 		}
 	}
 }

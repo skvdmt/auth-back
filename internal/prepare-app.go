@@ -45,7 +45,7 @@ func (p *PrepareApp) Start() error {
 			os.Exit(1)
 		}
 	}()
-	return p.app.HelthCheckLock()
+	return p.app.HealthCheckLock()
 }
 
 // Stop Остановка.

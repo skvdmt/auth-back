@@ -31,20 +31,20 @@ const (
 // App Репоситорный слой.
 type App struct {
 	// Соединение с базой данных.
-	db            *sql.DB
-	cleaningTiker *time.Ticker
-	stopCleaning  chan struct{}
-	wg            *sync.WaitGroup
-	documentation []byte
+	db             *sql.DB
+	cleaningTicker *time.Ticker
+	stopCleaning   chan struct{}
+	wg             *sync.WaitGroup
+	documentation  []byte
 }
 
 // NewApp Конструктор.
-func NewApp(ctx context.Context) (*App, error) {
+func NewApp(_ context.Context) (*App, error) {
 	model.Log.Info.Info("repository layer creating")
 	a := &App{
-		cleaningTiker: time.NewTicker(CLEANING_INTERVAL),
-		stopCleaning:  make(chan struct{}, 1),
-		wg:            &sync.WaitGroup{},
+		cleaningTicker: time.NewTicker(CLEANING_INTERVAL),
+		stopCleaning:   make(chan struct{}, 1),
+		wg:             &sync.WaitGroup{},
 	}
 	// Соединение с базой данных.
 	var err error
@@ -66,9 +66,9 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 // Stop Остановка.
-func (a *App) Stop(ctx context.Context) error {
+func (a *App) Stop(_ context.Context) error {
 	// Остановка и закрытие тикера очистки.
-	a.cleaningTiker.Stop()
+	a.cleaningTicker.Stop()
 	// Остановка обработчика тикера очистки.
 	close(a.stopCleaning)
 
@@ -85,7 +85,7 @@ func (a *App) Stop(ctx context.Context) error {
 }
 
 // Tokens Получение токенов.
-func (a *App) Tokens(ctx context.Context, username, password string) (*entities.Tokens, error) {
+func (a *App) Tokens(_ context.Context, username, password string) (*entities.Tokens, error) {
 	if username != USER_NAME || password != USER_PASSWORD {
 		return nil, erw.New(
 			erw.Status(http.StatusUnauthorized),
@@ -96,7 +96,7 @@ func (a *App) Tokens(ctx context.Context, username, password string) (*entities.
 }
 
 // Refresh Обновление токенов.
-func (a *App) Refresh(ctx context.Context, username, token string) (*entities.Tokens, error) {
+func (a *App) Refresh(_ context.Context, username, token string) (*entities.Tokens, error) {
 	q := `DELETE FROM ONLY refresh_tokens WHERE id IN
 	 (SELECT id FROM refresh_tokens
 	  WHERE username = $1 AND refresh_token = $2
@@ -128,7 +128,7 @@ func (a *App) Refresh(ctx context.Context, username, token string) (*entities.To
 }
 
 // Documentation Документация.
-func (a *App) Documentation(c context.Context) []byte {
+func (a *App) Documentation(_ context.Context) []byte {
 	return a.documentation
 }
 
@@ -162,7 +162,7 @@ func (a *App) cleaningHandler() {
 	}()
 	for {
 		select {
-		case <-a.cleaningTiker.C:
+		case <-a.cleaningTicker.C:
 			if err := a.clearRefreshTokens(); err != nil {
 				model.Errors <- err
 			}

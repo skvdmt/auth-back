@@ -88,9 +88,10 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_ed25519
           sudo chmod 600 ~/.ssh/github_ed25519
           echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-      - name: Creating and runnig application container.
+      - name: Creating and running application container.
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
             docker stop ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} || true
             docker rm ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} || true
             docker pull ${{ github.repository }}-v${{ vars.MAJOR_VERSION }}
@@ -104,6 +105,11 @@ jobs:
               --restart unless-stopped \
               --stop-timeout -1 \
               ${{ github.repository }}-v${{ vars.MAJOR_VERSION }}
+          EOF
+      - name: Creating and running documentation container.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
             docker stop ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }}-doc || true
             docker rm ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }}-doc || true
             docker run -d \

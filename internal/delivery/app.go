@@ -3,6 +3,7 @@ package delivery
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -79,7 +80,7 @@ func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteRefresh Удаление токена обновления.
-func (a *App) DeleteRefresh(w http.ResponseWriter, r *http.Request) {
+func (a *App) DeleteRefresh(w http.ResponseWriter, _ *http.Request) {
 	model.Log.Info.Info("Logout")
 	// Удалить refresh_token из cookie.
 	http.SetCookie(w, &http.Cookie{
@@ -99,14 +100,15 @@ func (a *App) DeleteRefresh(w http.ResponseWriter, r *http.Request) {
 func (a *App) Documentation(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/yaml")
 	w.WriteHeader(http.StatusOK)
-	w.Write(a.usecase.Documentation(r.Context()))
+	_, _ = w.Write(a.usecase.Documentation(r.Context()))
 }
 
 // errorHandle Обработка ошибок.
 func (a *App) errorHandle(w http.ResponseWriter, e error) {
-	err, ok := e.(*erw.ErrorWrapper)
+	var err *erw.ErrorWrapper
+	ok := errors.As(e, &err)
 	if !ok {
-		model.Errors <- fmt.Errorf("error convertion faled; error: %v", e)
+		model.Errors <- fmt.Errorf("error conversion failed; error: %v", e)
 		return
 	}
 	// Логирование ошибки.
@@ -123,10 +125,10 @@ func (a *App) response(w http.ResponseWriter, status int, resp any) {
 	w.WriteHeader(status)
 	b, ok := resp.([]byte)
 	if ok {
-		w.Write(b)
+		_, _ = w.Write(b)
 		return
 	}
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // setRefreshTokenCookie Запись в cookie токена обновления.
