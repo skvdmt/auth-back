@@ -43,14 +43,17 @@ jobs:
               --name ${{ secrets.DOCKER_NETWORK }}-builder \
               --driver docker-container \
               --driver-opt "network=${{ secrets.DOCKER_NETWORK }}"
+            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }}"
+            export ACCESS_KEY="${{ secrets.ACCESS_KEY }}"
+            export REFRESH_KEY="${{ secrets.REFRESH_KEY }}"
             docker buildx build \
               --network=host \
               --target=testing \
               --output=type=docker \
               --build-arg NAME=${{ github.event.repository.name }} \
-              --build-arg POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
-              --build-arg ACCESS_KEY=${{ secrets.ACCESS_KEY }} \
-              --build-arg REFRESH_KEY=${{ secrets.REFRESH_KEY }} \
+              --secret id=postgres_password,env=POSTGRES_PASSWORD \
+              --secret id=access_key,env=ACCESS_KEY \
+              --secret id=refresh_key,env=REFRESH_KEY \
               --no-cache \
               --tag ${{ github.repository }}:testing .
           EOF

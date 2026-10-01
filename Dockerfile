@@ -14,12 +14,16 @@ RUN go mod download
 
 # Тестирование.
 FROM preper AS testing
-ARG POSTGRES_PASSWORD
-ARG ACCESS_KEY
-ARG REFRESH_KEY
-RUN go test --tags=unit -v ./...
-RUN go test --tags=integration -v ./...
-RUN go test --tags=e2e -v ./...
+
+RUN --mount=type=secret,id=postgres_password \
+  --mount=type=secret,id=access_key \
+  --mount=type=secret,id=refresh_key \
+  export POSTGRES_PASSWORD=$(cat /run/secrets/postgres_password) && \
+  export ACCESS_KEY=$(cat /run/secrets/access_key) && \
+  export REFRESH_KEY=$(cat /run/secrets/refresh_key) && \
+  go test --tags=unit -v ./... && \
+  go test --tags=integration -v ./... && \
+  go test --tags=e2e -v ./...
 
 # Сборка.
 FROM preper AS building
