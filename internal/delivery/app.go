@@ -10,7 +10,7 @@ import (
 
 	"github.com/skvdmt/auth-back/internal/model"
 	"github.com/skvdmt/auth-back/internal/usecase"
-	"github.com/skvdmt/erw"
+	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
 )
 
 const (
@@ -66,7 +66,7 @@ func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("refresh_token")
 	if err != nil {
 		a.errorHandle(w, erw.New(
-			erw.Status(http.StatusUnauthorized),
+			erw.CodeHTTP(http.StatusUnauthorized),
 		))
 		return
 	}
@@ -112,11 +112,9 @@ func (a *App) errorHandle(w http.ResponseWriter, e error) {
 		return
 	}
 	// Логирование ошибки.
-	if err.LoggingError() != nil {
-		model.Log.Error.Error(err.LoggingErrorText())
-	}
+	model.Log.Error.Error(err.Detailed().Error())
 	// Отправка ответа клиенту.
-	a.response(w, err.StatusCode(), err.ResponseJSON())
+	a.response(w, err.Code(), err.Message())
 }
 
 // response Отправить ответ.

@@ -8,7 +8,7 @@ import (
 	"github.com/skvdmt/auth-back/internal/entities"
 	"github.com/skvdmt/auth-back/internal/model"
 	"github.com/skvdmt/auth-back/internal/repository"
-	"github.com/skvdmt/erw"
+	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
 	"github.com/skvdmt/jwt"
 )
 
@@ -46,16 +46,16 @@ func (a *App) Tokens(ctx context.Context, username, password string) (*entities.
 	if utf8.RuneCountInString(username) < 3 ||
 		utf8.RuneCountInString(username) > 15 {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
-			erw.Response("username must be from 3 to 15 characters"),
+			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("username must be from 3 to 15 characters"),
 		)
 	}
 	// Валидация длины пароля.
 	if utf8.RuneCountInString(password) < 8 ||
 		utf8.RuneCountInString(password) > 20 {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
-			erw.Response("password must be from 8 to 20 characters"),
+			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("password must be from 8 to 20 characters"),
 		)
 	}
 	return a.repository.Tokens(ctx, username, password)
@@ -66,18 +66,18 @@ func (a *App) Refresh(ctx context.Context, token string) (*entities.Tokens, erro
 	p, err := jwt.Parse(token)
 	if err != nil {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
+			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
 	if v, _ := p.Valid(model.RefreshKey); !v {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
+			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
 	u, ok := p.Claim("usr")
 	if !ok {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
+			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
 	return a.repository.Refresh(ctx, u, token)

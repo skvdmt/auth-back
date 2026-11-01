@@ -13,8 +13,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/skvdmt/auth-back/internal/entities"
 	"github.com/skvdmt/auth-back/internal/model"
-	"github.com/skvdmt/erw"
 	"github.com/skvdmt/jwt"
+	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
 )
 
 const (
@@ -88,8 +88,8 @@ func (a *App) Stop(_ context.Context) error {
 func (a *App) Tokens(_ context.Context, username, password string) (*entities.Tokens, error) {
 	if username != USER_NAME || password != USER_PASSWORD {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
-			erw.Response("incorrect login or password"),
+			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("incorrect login or password"),
 		)
 	}
 	return a.createTokens(username)
@@ -105,14 +105,14 @@ func (a *App) Refresh(_ context.Context, username, token string) (*entities.Toke
 	r, err := a.db.Exec(q, as...)
 	if err != nil {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
+			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
 	c, err := r.RowsAffected()
 	if err != nil {
 		return nil, erw.New(
-			erw.Status(http.StatusInternalServerError),
-			erw.Logging(
+			erw.CodeHTTP(http.StatusInternalServerError),
+			erw.Internal(
 				erw.Location(PKG, "RefreshTokens", "RowsAffected"),
 				erw.Error(err),
 				erw.SQL(q, as),
@@ -121,7 +121,7 @@ func (a *App) Refresh(_ context.Context, username, token string) (*entities.Toke
 	}
 	if c != 1 {
 		return nil, erw.New(
-			erw.Status(http.StatusUnauthorized),
+			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
 	return a.createTokens(username)
@@ -195,8 +195,8 @@ func (a *App) createTokens(username string) (*entities.Tokens, error) {
 	_, err := a.db.Exec(q, as...)
 	if err != nil {
 		return nil, erw.New(
-			erw.Status(http.StatusInternalServerError),
-			erw.Logging(
+			erw.CodeHTTP(http.StatusInternalServerError),
+			erw.Internal(
 				erw.Location(PKG, "createTokens", "delete old refresh tokens"),
 				erw.SQL(q, as...),
 			),
@@ -240,8 +240,8 @@ func (a *App) saveRefreshToken(u, t string) error {
 	_, err := a.db.Exec(q, as...)
 	if err != nil {
 		return erw.New(
-			erw.Status(http.StatusInternalServerError),
-			erw.Logging(
+			erw.CodeHTTP(http.StatusInternalServerError),
+			erw.Internal(
 				erw.Location(PKG, "saveRefreshToken", "Exec"),
 				erw.Error(err),
 				erw.SQL(q, as),
