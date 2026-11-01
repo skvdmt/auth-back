@@ -114,7 +114,7 @@ func (a *App) errorHandle(w http.ResponseWriter, e error) {
 	// Логирование ошибки.
 	model.Log.Error.Error(err.Detailed().Error())
 	// Отправка ответа клиенту.
-	a.response(w, err.Code(), err.Message())
+	a.response(w, err.Code(), map[string]string{"error": err.Message()})
 }
 
 // response Отправить ответ.
