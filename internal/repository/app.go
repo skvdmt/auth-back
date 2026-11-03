@@ -11,10 +11,13 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/segmentio/kafka-go"
 	"github.com/skvdmt/auth-back/internal/entities"
+	"github.com/skvdmt/auth-back/internal/go/gen/auth_error_v1"
 	"github.com/skvdmt/auth-back/internal/model"
 	"github.com/skvdmt/jwt"
 	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -36,6 +39,7 @@ type App struct {
 	stopCleaning   chan struct{}
 	wg             *sync.WaitGroup
 	documentation  []byte
+	kafkaWriter    *kafka.Writer
 }
 
 // NewApp Конструктор.
@@ -62,6 +66,23 @@ func NewApp(_ context.Context) (*App, error) {
 	// Обработчик очистки.
 	a.wg.Add(1)
 	go a.cleaningHandler()
+	// Создание подключения к kafka
+	model.Log.Info.Info("kafka writer creating")
+	a.kafkaWriter = &kafka.Writer{
+		Addr: kafka.TCP(fmt.Sprintf(
+			"%s:%d",
+			model.Conf.Kafka.Host,
+			model.Conf.Kafka.Port,
+		)),
+		Topic:        model.Conf.Kafka.AuthErrorTopic,
+		RequiredAcks: kafka.RequireAll,
+		MaxAttempts:  model.Conf.Kafka.MaxAttempts,
+		WriteTimeout: time.Duration(model.Conf.Kafka.WriteTimeoutMillisecond) * time.Millisecond,
+		Async:        model.Conf.Kafka.Async,
+		BatchTimeout: time.Duration(model.Conf.Kafka.BatchTimeoutMillisecond) * time.Millisecond,
+		BatchSize:    model.Conf.Kafka.BatchSize,
+		BatchBytes:   model.Conf.Kafka.BatchBytes,
+	}
 	return a, nil
 }
 
@@ -71,15 +92,17 @@ func (a *App) Stop(_ context.Context) error {
 	a.cleaningTicker.Stop()
 	// Остановка обработчика тикера очистки.
 	close(a.stopCleaning)
-
 	// Ожидание завершения горутин.
 	a.wg.Wait()
-
 	// Закрытие соединения с базой данных.
 	if err := a.closeDB(); err != nil {
 		return err
 	}
-
+	// Остановка записи в kafka
+	if err := a.kafkaWriter.Close(); err != nil {
+		return err
+	}
+	model.Log.Info.Info("kafka writer closed")
 	model.Log.Info.Info("repository layer stopped")
 	return nil
 }
@@ -130,6 +153,25 @@ func (a *App) Refresh(_ context.Context, username, token string) (*entities.Toke
 // Documentation Документация.
 func (a *App) Documentation(_ context.Context) []byte {
 	return a.documentation
+}
+
+// SendAuthError Отправка ошибки оутентификации.
+func (a *App) SendAuthError(c context.Context, e *auth_error_v1.Event) error {
+	m, err := proto.Marshal(e)
+	if err != nil {
+		return err
+	}
+	go func() {
+		if err := a.kafkaWriter.WriteMessages(c, kafka.Message{
+			Key:   e.Id,
+			Value: m,
+		}); err != nil {
+			model.ExternalErrors <- fmt.Errorf("kafka error (SendAuthError): %v", err)
+			return
+		}
+		model.Log.Info.Info("Auth error sent")
+	}()
+	return nil
 }
 
 // updateDocumentation Обновление документации.

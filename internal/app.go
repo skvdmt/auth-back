@@ -55,8 +55,9 @@ func NewApp() (*App, error) {
 		interrupt: make(chan os.Signal),
 		wg:        &sync.WaitGroup{},
 	}
-	// Создане глобального канала ошибок для всего приложения.
+	// Создане глобальных каналов ошибок для всего приложения.
 	model.Errors = make(chan error)
+	model.ExternalErrors = make(chan error)
 	// Создание контекста.
 	a.ctx, a.cancel = context.WithCancel(context.Background())
 	// Ключи.
@@ -131,16 +132,26 @@ func (a *App) errorHandler() {
 		a.wg.Done()
 	}()
 	for {
-		err := <-model.Errors
-		if err == nil {
-			return
-		}
-		if errors.Is(err, context.Canceled) {
-			continue
-		}
-		a.errors = append(a.errors, err)
-		if !a.stopping {
-			a.interrupt <- syscall.SIGTERM
+		select {
+		case err := <-model.Errors:
+			if err == nil {
+				return
+			}
+			if errors.Is(err, context.Canceled) {
+				continue
+			}
+			a.errors = append(a.errors, err)
+			if !a.stopping {
+				a.interrupt <- syscall.SIGTERM
+			}
+		case err := <-model.ExternalErrors:
+			if err == nil {
+				return
+			}
+			if errors.Is(err, context.Canceled) {
+				continue
+			}
+			model.Log.Error.Error(err.Error())
 		}
 	}
 }
@@ -171,7 +182,8 @@ func (a *App) interruptHandler() []error {
 	signal.Notify(a.interrupt, syscall.SIGTERM, syscall.SIGINT)
 	<-a.interrupt
 	a.stop()
-	// Закрытие канала ошибок.
+	// Закрытие каналов ошибок.
+	close(model.ExternalErrors)
 	close(model.Errors)
 	// Ожидание завершения горутин.
 	a.wg.Wait()

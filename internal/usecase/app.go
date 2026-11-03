@@ -6,10 +6,11 @@ import (
 	"unicode/utf8"
 
 	"github.com/skvdmt/auth-back/internal/entities"
+	"github.com/skvdmt/auth-back/internal/go/gen/auth_error_v1"
 	"github.com/skvdmt/auth-back/internal/model"
 	"github.com/skvdmt/auth-back/internal/repository"
-	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
 	"github.com/skvdmt/jwt"
+	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
 )
 
 // App Сервисный слой.
@@ -86,4 +87,8 @@ func (a *App) Refresh(ctx context.Context, token string) (*entities.Tokens, erro
 // Documentation Документация.
 func (a *App) Documentation(c context.Context) []byte {
 	return a.repository.Documentation(c)
+}
+
+func (a *App) SendAuthError(c context.Context, e *auth_error_v1.Event) error {
+	return a.repository.SendAuthError(c, e)
 }

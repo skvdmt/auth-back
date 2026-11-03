@@ -20,9 +20,22 @@ jobs:
             rm -rf ${{ github.repository }}
             git clone ssh://git@github.com/${{ github.repository }}.git
           EOF
+      - name: Create kafka topic auth-error.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
+            docker exec kafka /opt/kafka/bin/kafka-topics.sh \
+              --bootstrap-server kafka:8000 \
+              --create \
+              --if-not-exists \
+              --topic auth-error \
+              --partitions 1 \
+              --replication-factor 1
+          EOF
       - name: Migrate up.
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
             cd ~/src/${{ github.event.repository.name }}
             docker run --rm \
               --network=${{ secrets.DOCKER_NETWORK }} \

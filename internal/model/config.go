@@ -47,12 +47,26 @@ type PostgresConfig struct {
 	Database string `yaml:"database"`
 }
 
+// Kafka Найстройки Apache Kafka
+type Kafka struct {
+	Host                    string `yaml:"host"`
+	Port                    uint16 `yaml:"port"`
+	AuthErrorTopic          string `yaml:"auth_error_topic"`
+	MaxAttempts             int    `yaml:"max_attempts"`
+	WriteTimeoutMillisecond int    `yaml:"write_timeout_millisecond"`
+	Async                   bool   `yaml:"async"`
+	BatchTimeoutMillisecond int    `yaml:"batch_timeout_millisecond"`
+	BatchSize               int    `yaml:"batch_size"`
+	BatchBytes              int64  `yaml:"batch_bytes"`
+}
+
 // Config Конфигурация.
 type Config struct {
 	Links        *Links          `yaml:"links"`
 	Postgres     *PostgresConfig `yaml:"postgres"`
 	Server       *ServerConfig   `yaml:"server"`
 	CookieDomain string          `yaml:"cookie_domain"`
+	Kafka        *Kafka          `yaml:"kafka"`
 }
 
 // ServerConfig Конфигурация сервера.
@@ -71,6 +85,7 @@ func NewConfig() (*Config, error) {
 		Postgres: &PostgresConfig{},
 		Server:   &ServerConfig{},
 		Links:    &Links{},
+		Kafka:    &Kafka{},
 	}
 	if err := yaml.Unmarshal(f, c); err != nil {
 		return nil, err
