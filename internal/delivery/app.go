@@ -111,8 +111,10 @@ func (a *App) errorHandle(w http.ResponseWriter, e error) {
 		model.Errors <- fmt.Errorf("error conversion failed; error: %v", e)
 		return
 	}
-	// Логирование ошибки.
-	model.Log.Error.Error(err.Detailed().Error())
+	// Логирование ошибки (Если есть описание для внутреннего использования).
+	if err.Internal() != nil {
+		model.Log.Error.Error(err.Detailed().Error())
+	}
 	// Отправка ответа клиенту.
 	a.response(w, err.Code(), map[string]string{"error": err.Message()})
 }

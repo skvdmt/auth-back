@@ -9,6 +9,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/skvdmt/skvdmt-back v0.0.0-20261101083114-685d201d8895
+require github.com/skvdmt/skvdmt-back v0.0.0-20261103043919-4b6cc36d60c3
 
 require golang.org/x/sys v0.44.0 // indirect
