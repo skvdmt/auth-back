@@ -12,10 +12,3 @@ cookie_domain: localhost
 kafka:
   host: localhost
   port: 9092
-  auth_error_topic: auth-error
-  max_attempts: 3
-  write_timeout_millisecond: 300
-  async: false
-  batch_timeout_millisecond: 1_000
-  batch_size: 10_000
-  batch_bytes: 10_000_000

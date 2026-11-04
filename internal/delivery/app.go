@@ -28,12 +28,14 @@ const (
 type App struct {
 	// Сервисный слой.
 	usecase Usecase
+	// Контекст приложения.
+	ctx context.Context
 }
 
 // NewApp Конструктор.
 func NewApp(ctx context.Context) (*App, error) {
 	model.Log.Info.Info("delivery layer creating")
-	a := &App{}
+	a := &App{ctx: ctx}
 	var err error
 	// Создание сервисного слоя.
 	a.usecase, err = usecase.NewApp(ctx)

@@ -79,6 +79,7 @@ func TestTokens(t *testing.T) {
 			if err != nil {
 				log.Fatal(err)
 			}
+			req.Header.Set("X-Forwarded-For", "192.168.1.1")
 			req.SetBasicAuth(test.login, test.password)
 			resp, err := c.Do(req)
 			if err != nil {

@@ -34,12 +34,13 @@ const (
 // App Репоситорный слой.
 type App struct {
 	// Соединение с базой данных.
-	db             *sql.DB
-	cleaningTicker *time.Ticker
-	stopCleaning   chan struct{}
-	wg             *sync.WaitGroup
-	documentation  []byte
-	kafkaWriter    *kafka.Writer
+	db                *sql.DB
+	cleaningTicker    *time.Ticker
+	stopCleaning      chan struct{}
+	wg                *sync.WaitGroup
+	documentation     []byte
+	AuthErrorMessages chan kafka.Message
+	KafkaWriter       *KafkaWriter
 }
 
 // NewApp Конструктор.
@@ -66,23 +67,16 @@ func NewApp(_ context.Context) (*App, error) {
 	// Обработчик очистки.
 	a.wg.Add(1)
 	go a.cleaningHandler()
-	// Создание подключения к kafka
-	model.Log.Info.Info("kafka writer creating")
-	a.kafkaWriter = &kafka.Writer{
-		Addr: kafka.TCP(fmt.Sprintf(
-			"%s:%d",
-			model.Conf.Kafka.Host,
-			model.Conf.Kafka.Port,
-		)),
-		Topic:        model.Conf.Kafka.AuthErrorTopic,
-		RequiredAcks: kafka.RequireAll,
-		MaxAttempts:  model.Conf.Kafka.MaxAttempts,
-		WriteTimeout: time.Duration(model.Conf.Kafka.WriteTimeoutMillisecond) * time.Millisecond,
-		Async:        model.Conf.Kafka.Async,
-		BatchTimeout: time.Duration(model.Conf.Kafka.BatchTimeoutMillisecond) * time.Millisecond,
-		BatchSize:    model.Conf.Kafka.BatchSize,
-		BatchBytes:   model.Conf.Kafka.BatchBytes,
-	}
+
+	// Создание Writer для записи ошибок аутентификации в kafka.
+	a.AuthErrorMessages = make(chan kafka.Message)
+	a.KafkaWriter = NewKafkaWriter(
+		a.AuthErrorMessages,
+		model.ExternalErrors,
+		KafkaWriterWithTopic("auth-error"),
+	)
+	a.KafkaWriter.Start()
+
 	return a, nil
 }
 
@@ -98,11 +92,10 @@ func (a *App) Stop(_ context.Context) error {
 	if err := a.closeDB(); err != nil {
 		return err
 	}
-	// Остановка записи в kafka
-	if err := a.kafkaWriter.Close(); err != nil {
-		return err
-	}
-	model.Log.Info.Info("kafka writer closed")
+	// Закрытие канала для остановки kafka writer.
+	close(a.AuthErrorMessages)
+	// Ожидание завершения .
+	a.KafkaWriter.Wait()
 	model.Log.Info.Info("repository layer stopped")
 	return nil
 }
@@ -161,16 +154,10 @@ func (a *App) SendAuthError(c context.Context, e *auth_error_v1.Event) error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		if err := a.kafkaWriter.WriteMessages(c, kafka.Message{
-			Key:   e.Id,
-			Value: m,
-		}); err != nil {
-			model.ExternalErrors <- fmt.Errorf("kafka error (SendAuthError): %v", err)
-			return
-		}
-		model.Log.Info.Info("Auth error sent")
-	}()
+	a.AuthErrorMessages <- kafka.Message{
+		Key:   e.Id,
+		Value: m,
+	}
 	return nil
 }
 

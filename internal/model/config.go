@@ -49,15 +49,8 @@ type PostgresConfig struct {
 
 // Kafka Найстройки Apache Kafka
 type Kafka struct {
-	Host                    string `yaml:"host"`
-	Port                    uint16 `yaml:"port"`
-	AuthErrorTopic          string `yaml:"auth_error_topic"`
-	MaxAttempts             int    `yaml:"max_attempts"`
-	WriteTimeoutMillisecond int    `yaml:"write_timeout_millisecond"`
-	Async                   bool   `yaml:"async"`
-	BatchTimeoutMillisecond int    `yaml:"batch_timeout_millisecond"`
-	BatchSize               int    `yaml:"batch_size"`
-	BatchBytes              int64  `yaml:"batch_bytes"`
+	Host string `yaml:"host"`
+	Port uint16 `yaml:"port"`
 }
 
 // Config Конфигурация.
