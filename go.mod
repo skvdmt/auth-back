@@ -1,6 +1,6 @@
 module github.com/skvdmt/auth-back
 
-go 1.25.1
+go 1.26.0
 
 require (
 	github.com/lib/pq v1.12.3
@@ -16,6 +16,7 @@ require (
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/segmentio/kafka-go v0.4.51 // indirect
+	github.com/skvdmt/secret-contracts v0.0.0-20261104065749-faf12828e6b7 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/skvdmt/auth-back/internal/entities"
-	"github.com/skvdmt/auth-back/internal/go/gen/auth_error_v1"
+	"github.com/skvdmt/secret-contracts/pkg/go/gen/auth_error_v1"
 )
 
 // Usecase Интерфейс сервисного слоя.

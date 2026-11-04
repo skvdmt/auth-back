@@ -13,9 +13,9 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/segmentio/kafka-go"
 	"github.com/skvdmt/auth-back/internal/entities"
-	"github.com/skvdmt/auth-back/internal/go/gen/auth_error_v1"
 	"github.com/skvdmt/auth-back/internal/model"
 	"github.com/skvdmt/jwt"
+	"github.com/skvdmt/secret-contracts/pkg/go/gen/auth_error_v1"
 	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
 	"google.golang.org/protobuf/proto"
 )

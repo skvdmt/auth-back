@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/skvdmt/auth-back/internal/go/gen/auth_error_v1"
 	"github.com/skvdmt/auth-back/internal/model"
 	"github.com/skvdmt/auth-back/internal/usecase"
+	"github.com/skvdmt/secret-contracts/pkg/go/gen/auth_error_v1"
 	erw "github.com/skvdmt/skvdmt-back/pkg/errwrap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

@@ -12,6 +12,8 @@ github.com/segmentio/kafka-go v0.4.51 h1:JgDPPG75tC1rWIS2Me6MwcvXJ6f49UQ4HjAOef7
 github.com/segmentio/kafka-go v0.4.51/go.mod h1:Y1gn60kzLEEaW28YshXyk2+VCUKbJ3Qr6DrnT3i4+9E=
 github.com/skvdmt/jwt v0.0.0-20260517114917-87a7e7540dee h1:kF/oe+ExJZjya18GB+NER4jtmXXTVKdUtQi5UnT1x7A=
 github.com/skvdmt/jwt v0.0.0-20260517114917-87a7e7540dee/go.mod h1:z3m1JzmMIepGOcvfW3irA7jDpXqNdWfwgJg9a1/U4OQ=
+github.com/skvdmt/secret-contracts v0.0.0-20261104065749-faf12828e6b7 h1:Ia3HU6dsGIqphD4gb+z4b+k0RIENioCx6x4VtpFMAos=
+github.com/skvdmt/secret-contracts v0.0.0-20261104065749-faf12828e6b7/go.mod h1:PQf2X4NnOMaeB3+oT9khBfPNkctlXkv3lwp7jVpn2wk=
 github.com/skvdmt/skvdmt-back v0.0.0-20261103042737-58556d0d394b h1:gwGq6kl3DZn/s0wX3mh9mCxa8wZKms/S9ZCYgyt1ul0=
 github.com/skvdmt/skvdmt-back v0.0.0-20261103042737-58556d0d394b/go.mod h1:s24hVxn7ZU1x2IRCRWTd7HwEARRz5SvONQLkfawJY+M=
 github.com/skvdmt/skvdmt-back v0.0.0-20261103043919-4b6cc36d60c3 h1:Db7Yoc7aQDOqm/AViAWLUJ1GFzRCg9l4Bga+bu31pYk=
