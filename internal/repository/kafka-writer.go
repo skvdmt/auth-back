@@ -82,6 +82,8 @@ func (k *KafkaWriter) Start() {
 		}()
 		model.Log.Info.Info("kafka writer handler starting")
 		ms := []kafka.Message{}
+		dump := time.NewTicker(KAFKA_BATCH_TIMEOUT)
+		defer dump.Stop()
 		for {
 			select {
 			case <-k.ctx.Done():
@@ -96,14 +98,20 @@ func (k *KafkaWriter) Start() {
 					return
 				}
 				ms = append(ms, m)
-			default:
-				if len(ms) == 0 {
-					continue
+				if len(ms) >= KAFKA_BATCH_SIZE {
+					if err := k.write(ms); err != nil {
+						k.errors <- err
+					}
+					ms = ms[:0]
+					dump.Reset(KAFKA_BATCH_TIMEOUT)
 				}
-				if err := k.write(ms); err != nil {
-					k.errors <- err
+			case <-dump.C:
+				if len(ms) > 0 {
+					if err := k.write(ms); err != nil {
+						k.errors <- err
+					}
+					ms = ms[:0]
 				}
-				ms = ms[:0]
 			}
 		}
 	}()
