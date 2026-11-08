@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/lib/pq"
+	"github.com/skvdmt/auth-back/init/inserts"
 	"github.com/skvdmt/auth-back/internal/model"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -46,6 +47,9 @@ func NewPostgres() (*Posgres, error) {
 	}
 	db := sql.OpenDB(c)
 	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+	if err := inserts.InsertToPostgres(db); err != nil {
 		return nil, err
 	}
 	model.Log.Info.Info("postgres database connection success")
