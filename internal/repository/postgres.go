@@ -1,26 +1,33 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
 
 	"github.com/lib/pq"
-	"github.com/lib/pq/pqerror"
 	"github.com/skvdmt/auth-back/internal/model"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-	POSTGRES_PASSWORD = "POSTGRES_PASSWORD"
+	POSTGRES_PASSWORD_ENV = "POSTGRES_PASSWORD"
 )
 
-// OpenPostgresDB Открывает соединение с базой данных postgres.
-func OpenPostgresDB() (*sql.DB, error) {
+// Репозиторий Postgres.
+type Posgres struct {
+	db *sql.DB
+}
+
+// NewPostgres Конструктор.
+func NewPostgres() (*Posgres, error) {
 	model.Log.Info.Info("postgres database connection opening")
-	p, o := os.LookupEnv(POSTGRES_PASSWORD)
+	p, o := os.LookupEnv(POSTGRES_PASSWORD_ENV)
 	if !o {
-		return nil, fmt.Errorf("env %s is not set", POSTGRES_PASSWORD)
+		return nil, fmt.Errorf("env %s is not set", POSTGRES_PASSWORD_ENV)
 	}
 	pwd, err := url.QueryUnescape(p)
 	if err != nil {
@@ -42,13 +49,24 @@ func OpenPostgresDB() (*sql.DB, error) {
 		return nil, err
 	}
 	model.Log.Info.Info("postgres database connection success")
-	return db, nil
+	return &Posgres{
+		db: db,
+	}, nil
 }
 
-// IsPostgresErrorCode Поиск кода в ошибках postgres.
-func IsPostgresErrorCode(err error, errcode pqerror.Code) bool {
-	if pgerr, ok := err.(*pq.Error); ok {
-		return pgerr.Code == errcode
+// LoginVerification Проверка при входе.
+func (p *Posgres) LoginVerification(ctx context.Context, username, password string) (bool, error) {
+	var hash string
+	if err := p.db.QueryRowContext(ctx, `SELECT password_hash FROM users WHERE username = $1`, username).Scan(&hash); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
 	}
-	return false
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil, nil
+}
+
+// Stop Отстановка.
+func (p *Posgres) Stop() error {
+	return p.db.Close()
 }

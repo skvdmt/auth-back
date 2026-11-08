@@ -1,13 +1,14 @@
-CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id UUID NOT NULL DEFAULT uuidv7(),
-  username VARCHAR(15) NOT NULL,
-  refresh_token VARCHAR(4096) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT (now() AT TIME ZONE 'Europe/Moscow'),
-  PRIMARY KEY(id)
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(15) NOT NULL UNIQUE,
+  password_hash VARCHAR(64) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE refresh_tokens IS 'Таблица токенов обновления.';
-COMMENT ON COLUMN refresh_tokens.id IS 'Уникальный идентификатор токена обновления.';
-COMMENT ON COLUMN refresh_tokens.username IS 'Имя пользователя, токена обновления.';
-COMMENT ON COLUMN refresh_tokens.refresh_token IS 'Токен обновления.';
-COMMENT ON COLUMN refresh_tokens.created_at IS 'Дата и время создания токена обновления.';
+COMMENT ON TABLE users IS 'Таблица пользователей.';
+COMMENT ON COLUMN users.id IS 'Уникальный идентификатор пользователя.';
+COMMENT ON COLUMN users.username IS 'Имя пользователя.';
+COMMENT ON COLUMN users.password_hash IS 'Хеш пароля пользователя.';
+COMMENT ON COLUMN users.created_at IS 'Дата и время создания пользователя.';
+COMMENT ON COLUMN users.updated_at IS 'Дата и время обновления информации о пользователе.';

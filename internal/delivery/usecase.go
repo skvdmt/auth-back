@@ -16,7 +16,7 @@ type Usecase interface {
 	// Обновление токенов.
 	Refresh(c context.Context, token string) (*entities.Tokens, error)
 	// Документация.
-	Documentation(c context.Context) []byte
+	Documentation() string
 	// Отправка ошибки аутентификации.
 	SendAuthError(c context.Context, e *auth_error_v1.Event) error
 }

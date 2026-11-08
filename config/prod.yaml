@@ -8,7 +8,13 @@ postgres:
   database: auth-back
 server:
   port: 8000
-cookie_domain: secret.skvdmt.ru
 kafka:
   host: kafka
   port: 8000
+redis:
+  host: redis-refresh-tokens
+  port: 6379
+  db: 0
+cookie_domain: secret.skvdmt.ru
+access_token_ttl: 15m
+refresh_token_ttl: 24h

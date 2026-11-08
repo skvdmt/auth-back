@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"net/http"
+	"time"
 	"unicode/utf8"
 
 	"github.com/skvdmt/auth-back/internal/entities"
@@ -59,36 +60,104 @@ func (a *App) Tokens(ctx context.Context, username, password string) (*entities.
 			erw.Message("password must be from 8 to 20 characters"),
 		)
 	}
-	return a.repository.Tokens(ctx, username, password)
+	v, err := a.repository.LoginVerification(ctx, username, password)
+	if err != nil {
+		return nil, erw.New(
+			erw.CodeHTTP(http.StatusInternalServerError),
+			erw.Internal(
+				erw.Location("repository.LoginVerification"),
+				erw.Error(err),
+			),
+		)
+	}
+	if !v {
+		return nil, erw.New(
+			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("incorrect login or password"),
+		)
+	}
+	return a.newTokens(ctx, username)
 }
 
 // Refresh Обновление токенов.
 func (a *App) Refresh(ctx context.Context, token string) (*entities.Tokens, error) {
-	p, err := jwt.Parse(token)
+	t, err := jwt.Parse(token)
 	if err != nil {
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
-	if v, _ := p.Valid(model.RefreshKey); !v {
+	if v, _ := t.Valid(model.RefreshKey); !v {
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
-	u, ok := p.Claim("usr")
-	if !ok {
+	u, err := t.Username()
+	if err != nil {
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
 		)
 	}
-	return a.repository.Refresh(ctx, u, token)
+	v, err := a.repository.RefreshTokenValidation(ctx, u, token)
+	if err != nil {
+		return nil, erw.New(
+			erw.CodeHTTP(http.StatusInternalServerError),
+			erw.Internal(
+				erw.Location("repository.RefreshTokenValidation"),
+				erw.Error(err),
+			),
+		)
+	}
+	if !v {
+		return nil, erw.New(
+			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("invalid token"),
+		)
+	}
+	return a.newTokens(ctx, u)
 }
 
 // Documentation Документация.
-func (a *App) Documentation(c context.Context) []byte {
-	return a.repository.Documentation(c)
+func (a *App) Documentation() string {
+	return a.repository.Documentation()
 }
 
+// SendAuthError Отправка ошибки аутентификации.
 func (a *App) SendAuthError(c context.Context, e *auth_error_v1.Event) error {
-	return a.repository.SendAuthError(c, e)
+	return a.repository.AuthErrorSending(c, e)
+}
+
+// newTokens Создание пары токенов и сохранение токена обновления.
+func (a *App) newTokens(ctx context.Context, username string) (*entities.Tokens, error) {
+	t := entities.NewTokens(
+		a.newToken(model.Conf.AccessTokenTTL, username, model.AccessKey),
+		a.newToken(model.Conf.RefreshTokenTTL, username, model.RefreshKey),
+	)
+	if err := a.repository.RefreshTokenSaving(ctx, username, t.RefreshToken()); err != nil {
+		return nil, erw.New(
+			erw.CodeHTTP(http.StatusInternalServerError),
+			erw.Internal(
+				erw.Location("repository.RefreshTokenSaving"),
+				erw.Error(err),
+			),
+		)
+	}
+	return t, nil
+}
+
+// newToken Новый токен.
+func (a *App) newToken(exp time.Duration, username, key string) string {
+	return jwt.NewToken(
+		jwt.Headers(
+			jwt.Header("alg", "HS256"),
+			jwt.Header("typ", "JWT"),
+		),
+		jwt.Claims(
+			jwt.Claim("nbf", time.Now().Format(time.RFC3339)),
+			jwt.Claim("iat", time.Now().Format(time.RFC3339)),
+			jwt.Claim("exp", time.Now().Add(exp).Format(time.RFC3339)),
+			jwt.Claim("sub", username),
+		),
+		key,
+	)
 }

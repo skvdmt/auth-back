@@ -3,6 +3,7 @@ package model
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -39,6 +40,13 @@ type Links struct {
 	Documentation string `yaml:"documentation"`
 }
 
+// RedisConfig Конфигурация Redis.
+type RedisConfig struct {
+	Host string `yaml:"host"`
+	Port uint16 `yaml:"port"`
+	Db   int    `yaml:"db"`
+}
+
 // PostgresConfig Конфигурация postgres.
 type PostgresConfig struct {
 	Host     string `yaml:"host"`
@@ -47,19 +55,22 @@ type PostgresConfig struct {
 	Database string `yaml:"database"`
 }
 
-// Kafka Найстройки Apache Kafka
-type Kafka struct {
+// KafkaConfig Найстройки Apache Kafka
+type KafkaConfig struct {
 	Host string `yaml:"host"`
 	Port uint16 `yaml:"port"`
 }
 
 // Config Конфигурация.
 type Config struct {
-	Links        *Links          `yaml:"links"`
-	Postgres     *PostgresConfig `yaml:"postgres"`
-	Server       *ServerConfig   `yaml:"server"`
-	CookieDomain string          `yaml:"cookie_domain"`
-	Kafka        *Kafka          `yaml:"kafka"`
+	Links           *Links          `yaml:"links"`
+	Postgres        *PostgresConfig `yaml:"postgres"`
+	Server          *ServerConfig   `yaml:"server"`
+	Kafka           *KafkaConfig    `yaml:"kafka"`
+	Redis           *RedisConfig    `yaml:"redis"`
+	CookieDomain    string          `yaml:"cookie_domain"`
+	AccessTokenTTL  time.Duration   `yaml:"access_token_ttl"`
+	RefreshTokenTTL time.Duration   `yaml:"refresh_token_ttl"`
 }
 
 // ServerConfig Конфигурация сервера.
@@ -78,7 +89,8 @@ func NewConfig() (*Config, error) {
 		Postgres: &PostgresConfig{},
 		Server:   &ServerConfig{},
 		Links:    &Links{},
-		Kafka:    &Kafka{},
+		Kafka:    &KafkaConfig{},
+		Redis:    &RedisConfig{},
 	}
 	if err := yaml.Unmarshal(f, c); err != nil {
 		return nil, err

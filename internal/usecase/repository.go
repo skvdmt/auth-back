@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 
-	"github.com/skvdmt/auth-back/internal/entities"
 	"github.com/skvdmt/secret-contracts/pkg/go/gen/auth_error_v1"
 )
 
@@ -11,12 +10,15 @@ import (
 type Repository interface {
 	// Остановка.
 	Stop(context.Context) error
-	// Получение токенов.
-	Tokens(c context.Context, username, password string) (*entities.Tokens, error)
-	// Обновление токенов.
-	Refresh(c context.Context, username, token string) (*entities.Tokens, error)
-	// Документация.
-	Documentation(c context.Context) []byte
+	// Документация API.
+	Documentation() string
 	// Отправка ошибки аутентификации.
-	SendAuthError(c context.Context, e *auth_error_v1.Event) error
+	AuthErrorSending(context.Context, *auth_error_v1.Event) error
+
+	// Проверка при входе.
+	LoginVerification(ctx context.Context, username, password string) (bool, error)
+	// Сохранение токена обновления.
+	RefreshTokenSaving(ctx context.Context, username, token string) error
+	// Валидация токена обновления.
+	RefreshTokenValidation(ctx context.Context, username, token string) (bool, error)
 }

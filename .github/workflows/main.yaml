@@ -20,6 +20,29 @@ jobs:
             rm -rf ${{ github.repository }}
             git clone ssh://git@github.com/${{ github.repository }}.git
           EOF
+      - name: Redis cache for refresh tokens.
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
+            if [ "$(docker ps -aq -f name=^redis-refresh-tokens$)" ]; then
+              docker start redis-refresh-tokens
+            else
+              docker run -d \
+                --name redis-refresh-tokens \
+                --network ${{ secrets.DOCKER_NETWORK }} \
+                --restart unless-stopped \
+                --memory="64m" \
+                --cpus="0.25" \
+                -v rsdata:/data \
+                redis:7.4.12-alpine3.21 \
+                redis-server \
+                  --appendonly yes \
+                  --no-appendfsync-on-rewrite yes \
+                  --requirepass \${REDIS_PASSWORD} \
+                  --maxmemory 48mb \
+                  --maxmemory-policy allkeys-lru
+            fi
+          EOF
       - name: Create kafka topic auth-error.
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
@@ -85,9 +108,9 @@ jobs:
         if: success() || failure()
         run: |
           ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
-            docker rmi ${{ github.repository }}:testing
-            docker buildx rm ${{ secrets.DOCKER_NETWORK }}-builder
-            rm -rf ~/src/${{ github.event.repository.name }}
+            docker rmi ${{ github.repository }}:testing || true
+            docker buildx rm ${{ secrets.DOCKER_NETWORK }}-builder || true
+            rm -rf ~/src/${{ github.event.repository.name }} || true
           EOF
       - name: Remove ssh key files.
         if: success() || failure()

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -70,6 +71,7 @@ func (a *App) Tokens(w http.ResponseWriter, r *http.Request) {
 		var errw *erw.ErrorWrapper
 		ok := errors.As(err, &errw)
 		if !ok {
+			fmt.Println("@4")
 			model.Errors <- fmt.Errorf("error conversion failed; error: %v", err)
 			return
 		}
@@ -132,7 +134,7 @@ func (a *App) DeleteRefresh(w http.ResponseWriter, _ *http.Request) {
 func (a *App) Documentation(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/yaml")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(a.usecase.Documentation(r.Context()))
+	_, _ = io.WriteString(w, a.usecase.Documentation())
 }
 
 // errorHandle Обработка ошибок.
