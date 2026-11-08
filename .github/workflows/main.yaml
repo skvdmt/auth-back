@@ -38,7 +38,7 @@ jobs:
                 redis-server \
                   --appendonly yes \
                   --no-appendfsync-on-rewrite yes \
-                  --requirepass \${REDIS_PASSWORD} \
+                  --requirepass ${{ secrets.REDIS_PASSWORD }} \
                   --maxmemory 48mb \
                   --maxmemory-policy allkeys-lru
             fi
@@ -82,12 +82,14 @@ jobs:
             export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }}"
             export ACCESS_KEY="${{ secrets.ACCESS_KEY }}"
             export REFRESH_KEY="${{ secrets.REFRESH_KEY }}"
+            export REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             docker buildx build \
               --network=host \
               --target=testing \
               --output=type=docker \
               --build-arg NAME=${{ github.event.repository.name }} \
               --secret id=postgres_password,env=POSTGRES_PASSWORD \
+              --secret id=redis_password,env=REDIS_PASSWORD \
               --secret id=access_key,env=ACCESS_KEY \
               --secret id=refresh_key,env=REFRESH_KEY \
               --no-cache \
@@ -140,6 +142,7 @@ jobs:
               --memory="32m" \
               --cpus="0.25" \
               --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
+              --env REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
               --env ACCESS_KEY=${{ secrets.ACCESS_KEY }} \
               --env REFRESH_KEY=${{ secrets.REFRESH_KEY }} \
               --volume ${{ secrets.HOME }}/logs/${{ github.event.repository.name }}:/var/log/${{ github.event.repository.name }} \

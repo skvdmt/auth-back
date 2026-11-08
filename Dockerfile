@@ -16,9 +16,11 @@ RUN go mod download
 FROM preper AS testing
 
 RUN --mount=type=secret,id=postgres_password \
+  --mount=type=secret,id=redis_password \
   --mount=type=secret,id=access_key \
   --mount=type=secret,id=refresh_key \
   export POSTGRES_PASSWORD=$(cat /run/secrets/postgres_password) && \
+  export REDIS_PASSWORD=$(cat /run/secrets/redis_password) && \
   export ACCESS_KEY=$(cat /run/secrets/access_key) && \
   export REFRESH_KEY=$(cat /run/secrets/refresh_key) && \
   go test --tags=unit -v ./... && \
