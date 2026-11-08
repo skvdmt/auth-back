@@ -139,7 +139,9 @@ jobs:
               --network ${{ secrets.DOCKER_NETWORK }} \
               --name ${{ github.event.repository.name }}-v${{ vars.MAJOR_VERSION }} \
               --memory="32m" \
-              --cpus="0.25" \
+              --cpus="1" \
+              --env GOMAXPROCS=1 \
+              --env GOMEMLIMIT=26MiB \
               --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD_URL_ENCODE }} \
               --env REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
               --env ACCESS_KEY=${{ secrets.ACCESS_KEY }} \
