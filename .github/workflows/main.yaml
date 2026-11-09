@@ -33,7 +33,7 @@ jobs:
               --memory="64m" \
               --cpus="0.25" \
               --stop-timeout -1 \
-              -v rsdata:/data \
+              -v redis-refresh-tokens-data:/data \
               redis:7.4.12-alpine3.21 \
               redis-server \
                 --appendonly yes \
@@ -165,6 +165,12 @@ jobs:
               --restart unless-stopped \
               --env SWAGGER_JSON_URL=https://secret.skvdmt.ru/api/auth/v${{ vars.MAJOR_VERSION }}/openapi.yaml \
               docker.swagger.io/swaggerapi/swagger-ui
+          EOF
+      - name: Restart Nginx
+        run: |
+          ssh -i ~/.ssh/github_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            set -e
+            docker restart skvdmt-nginx || true
           EOF
       - name: Remove SSH key files.
         if: success() || failure()
