@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"crypto/rand"
+	"math/big"
 	"net/http"
 	"time"
 	"unicode/utf8"
@@ -46,18 +48,14 @@ func (a *App) Stop(ctx context.Context) error {
 func (a *App) Tokens(ctx context.Context, username, password string) (*entities.Tokens, error) {
 	// Валидация длины имени пользователя.
 	if utf8.RuneCountInString(username) < 3 ||
-		utf8.RuneCountInString(username) > 15 {
-		return nil, erw.New(
-			erw.CodeHTTP(http.StatusUnauthorized),
-			erw.Message("username must be from 3 to 15 characters"),
-		)
-	}
-	// Валидация длины пароля.
-	if utf8.RuneCountInString(password) < 8 ||
+		utf8.RuneCountInString(username) > 15 ||
+		utf8.RuneCountInString(password) < 8 ||
 		utf8.RuneCountInString(password) > 20 {
+		// timing attack securety
+		time.Sleep(150*time.Millisecond + time.Duration(a.rand(50, 100))*time.Millisecond)
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
-			erw.Message("password must be from 8 to 20 characters"),
+			erw.Message("incorrect login or password"),
 		)
 	}
 	v, err := a.repository.LoginVerification(ctx, username, password)
@@ -85,17 +83,20 @@ func (a *App) Refresh(ctx context.Context, token string) (*entities.Tokens, erro
 	if err != nil {
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("invalid refresh token"),
 		)
 	}
 	if v, _ := t.Valid(model.RefreshKey); !v {
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("invalid refresh token"),
 		)
 	}
 	u, err := t.Username()
 	if err != nil {
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
+			erw.Message("invalid refresh token"),
 		)
 	}
 	v, err := a.repository.RefreshTokenValidation(ctx, u, token)
@@ -111,7 +112,7 @@ func (a *App) Refresh(ctx context.Context, token string) (*entities.Tokens, erro
 	if !v {
 		return nil, erw.New(
 			erw.CodeHTTP(http.StatusUnauthorized),
-			erw.Message("invalid token"),
+			erw.Message("invalid refresh token"),
 		)
 	}
 	return a.newTokens(ctx, u)
@@ -160,4 +161,21 @@ func (a *App) newToken(exp time.Duration, username, key string) string {
 		),
 		key,
 	)
+}
+
+// rand Случайное число.
+func (a *App) rand(bottom, upper int64) int64 {
+	if bottom == upper {
+		return bottom
+	}
+	if bottom > upper {
+		bottom, upper = upper, bottom
+	}
+	diff := upper - bottom + 1
+	rnd := big.NewInt(diff)
+	num, err := rand.Int(rand.Reader, rnd)
+	if err != nil {
+		return bottom + (upper-bottom)/2
+	}
+	return num.Int64() + bottom
 }
