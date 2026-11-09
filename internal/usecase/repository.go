@@ -14,7 +14,6 @@ type Repository interface {
 	Documentation() string
 	// Отправка ошибки аутентификации.
 	AuthErrorSending(context.Context, *auth_error_v1.Event) error
-
 	// Проверка при входе.
 	LoginVerification(ctx context.Context, username, password string) (bool, error)
 	// Сохранение токена обновления.

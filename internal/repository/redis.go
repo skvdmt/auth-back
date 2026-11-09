@@ -24,6 +24,7 @@ type Redis struct {
 
 // NewRedis Констрктор.
 func NewRedis() (*Redis, error) {
+	model.Log.Info.Info("repository redis creating")
 	p, o := os.LookupEnv(REDIS_PASSWORD_ENV)
 	if !o {
 		return nil, fmt.Errorf("env %s not set", REDIS_PASSWORD_ENV)
@@ -37,6 +38,7 @@ func NewRedis() (*Redis, error) {
 		}),
 	}
 	r.client.Ping(context.Background()).Err()
+	model.Log.Info.Info("repository redis connection success")
 	return r, nil
 }
 
@@ -69,5 +71,9 @@ func (r *Redis) RefreshTokenValidation(ctx context.Context, username, token stri
 
 // Stop Отстановка.
 func (r *Redis) Stop() error {
-	return r.client.Close()
+	if err := r.client.Close(); err != nil {
+		return err
+	}
+	model.Log.Info.Info("repository redis stopped")
+	return nil
 }

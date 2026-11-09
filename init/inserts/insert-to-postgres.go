@@ -6,10 +6,12 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/lib/pq/pqerror"
+	"github.com/skvdmt/auth-back/internal/model"
 )
 
 // InsertToPostgres Вставка в postgres
 func InsertToPostgres(db *sql.DB) error {
+	model.Log.Info.Info("inserting initial data to postgres")
 	// Данные для тестов.
 	_, err := db.Exec(`INSERT INTO users (username, password_hash) VALUES('dima', '$2a$12$pmbuRJbrzDQvpd/.zfGrjejTuhWpQufTXPI1WHA6Ozvg1NPz9H476')`)
 	if err != nil && !IsPostgresErrorCode(err, pqerror.UniqueViolation) {

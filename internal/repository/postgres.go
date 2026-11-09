@@ -25,7 +25,7 @@ type Posgres struct {
 
 // NewPostgres Конструктор.
 func NewPostgres() (*Posgres, error) {
-	model.Log.Info.Info("postgres database connection opening")
+	model.Log.Info.Info("repository postgres creating")
 	p, o := os.LookupEnv(POSTGRES_PASSWORD_ENV)
 	if !o {
 		return nil, fmt.Errorf("env %s is not set", POSTGRES_PASSWORD_ENV)
@@ -49,10 +49,10 @@ func NewPostgres() (*Posgres, error) {
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
+	model.Log.Info.Info("postgres database connection success")
 	if err := inserts.InsertToPostgres(db); err != nil {
 		return nil, err
 	}
-	model.Log.Info.Info("postgres database connection success")
 	return &Posgres{
 		db: db,
 	}, nil
@@ -72,5 +72,9 @@ func (p *Posgres) LoginVerification(ctx context.Context, username, password stri
 
 // Stop Отстановка.
 func (p *Posgres) Stop() error {
-	return p.db.Close()
+	if err := p.db.Close(); err != nil {
+		return err
+	}
+	model.Log.Info.Info("repository postgres stopped")
+	return nil
 }

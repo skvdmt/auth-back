@@ -14,6 +14,7 @@ type Files struct {
 
 // NewFiles Конструктор.
 func NewFiles() (*Files, error) {
+	model.Log.Info.Info("repository files creating")
 	f := &Files{}
 	if err := f.updateDocumentation(); err != nil {
 		return nil, err

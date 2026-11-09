@@ -57,7 +57,7 @@ func (a *App) Stop(ctx context.Context) error {
 
 // Tokens Получение токенов.
 func (a *App) Tokens(w http.ResponseWriter, r *http.Request) {
-	model.Log.Info.Info("Auth")
+	model.Log.Info.Info("tokens")
 	ip, err := a.GetRealIp(r)
 	if err != nil {
 		a.errorHandle(w, erw.New(
@@ -96,7 +96,7 @@ func (a *App) Tokens(w http.ResponseWriter, r *http.Request) {
 
 // Refresh Обновление токенок.
 func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
-	model.Log.Info.Info("RefreshTokens")
+	model.Log.Info.Info("refresh")
 	c, err := r.Cookie("refresh_token")
 	if err != nil {
 		a.errorHandle(w, erw.New(
@@ -115,7 +115,7 @@ func (a *App) Refresh(w http.ResponseWriter, r *http.Request) {
 
 // DeleteRefresh Удаление токена обновления.
 func (a *App) DeleteRefresh(w http.ResponseWriter, _ *http.Request) {
-	model.Log.Info.Info("Logout")
+	model.Log.Info.Info("logout")
 	// Удалить refresh_token из cookie.
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",

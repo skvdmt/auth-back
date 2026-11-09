@@ -21,6 +21,7 @@ type Kafka struct {
 
 // NewKafka Конструктор.
 func NewKafka() (*Kafka, error) {
+	model.Log.Info.Info("repository kafka creating")
 	m := make(chan kafka.Message)
 	aew := NewKafkaWriter(
 		m,
@@ -53,5 +54,6 @@ func (k *Kafka) Stop() error {
 	close(k.AuthErrorMessages)
 	// Ожидание сброса оставшихся сообщений с ошибками авторизации.
 	k.AuthErrorWriter.Wait()
+	model.Log.Info.Info("repository kafka stopped")
 	return nil
 }
