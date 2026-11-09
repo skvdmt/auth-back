@@ -47,14 +47,14 @@ func TestTokens(t *testing.T) {
 			login:          "qq",
 			password:       "password",
 			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "username must be from 3 to 15 characters",
+			expectedError:  "incorrect login or password",
 		},
 		{
 			name:           "short password",
 			login:          "dima",
 			password:       "qqq",
 			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "password must be from 8 to 20 characters",
+			expectedError:  "incorrect login or password",
 		},
 		{
 			name:           "incorrect login or password",
