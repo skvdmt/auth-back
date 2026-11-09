@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/skvdmt/auth-back/internal"
 	"github.com/skvdmt/auth-back/internal/model"
 )
@@ -16,7 +19,7 @@ func main() {
 	defer func() {
 		// Закрытие логгера.
 		if err := model.Log.Close(); err != nil {
-			panic(err)
+			fmt.Fprintf(os.Stderr, "logger close error: %v\n", err)
 		}
 	}()
 	// Создание приложения.
